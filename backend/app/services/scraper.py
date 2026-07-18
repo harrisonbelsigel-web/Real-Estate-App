@@ -3,8 +3,6 @@ from datetime import datetime
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from geoalchemy2 import Geometry
-from geoalchemy2.functions import ST_GeomFromText
 
 from backend.app.models import Property, Area, RentalComparable, InvestmentAnalysis, ScrapingLog, PropertyType
 from backend.app.models.scraping_log import ScrapingStatus
@@ -55,8 +53,6 @@ class PropertyScraper:
 
             for prop_data in all_properties:
                 try:
-                    prop_data["geom"] = f"POINT({prop_data.get('longitude', 0)} {prop_data.get('latitude', 0)})"
-
                     property_obj = Property(**prop_data)
                     property_obj.area_id = area.id
 

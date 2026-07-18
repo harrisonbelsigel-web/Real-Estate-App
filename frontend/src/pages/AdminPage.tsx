@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react'
 import { api, formatCapRate } from '../api'
-import type { Area, ScrapingJob } from '../types'
+import type { Area, ScrapeFrequency, ScrapingJob } from '../types'
 
 const emptyForm = {
   name: '',
@@ -39,7 +39,7 @@ export default function AdminPage() {
       center_latitude: Number(form.center_latitude),
       center_longitude: Number(form.center_longitude),
       radius_miles: Number(form.radius_miles),
-      scrape_frequency: form.scrape_frequency,
+      scrape_frequency: form.scrape_frequency as ScrapeFrequency,
     }
     try {
       if (editingId) {

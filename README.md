@@ -23,7 +23,7 @@ A full-stack application that helps identify high-cap-rate real estate investmen
 
 - Python 3.10+
 - Node.js 16+
-- PostgreSQL 13+ (with PostGIS extension)
+- (Optional) PostgreSQL 13+ with PostGIS — only for production; local dev uses SQLite
 
 ### Backend Setup
 
@@ -36,7 +36,8 @@ cd Real-Estate-App
 2. Create a virtual environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+venv\Scripts\activate      # Windows
+# source venv/bin/activate # macOS/Linux
 ```
 
 3. Install dependencies:
@@ -44,28 +45,29 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
+4. (Optional) Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your database connection details
+# The defaults use a local SQLite file — no editing needed to get started.
 ```
 
-5. Initialize the database:
+5. Initialize the database with the starter cities:
 ```bash
-# Create PostGIS extension (first time only)
-psql -U postgres -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-
-# Run migrations (when available)
-alembic upgrade head
+# From the repo root. Creates real_estate_app.db (SQLite) and loads 13 areas.
+python -m backend.scripts.init_areas
 ```
 
-6. Run the backend:
+6. Run the backend (from the repo root):
 ```bash
-cd backend
-uvicorn app.main:app --reload
+uvicorn backend.app.main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8000` (interactive docs at `/docs`).
+
+> **Database note:** By default the app uses a zero-setup **SQLite** file, and
+> all geographic distance filtering is done in Python (Haversine). To use
+> PostgreSQL in production, set `DATABASE_URL` in `.env` and uncomment the
+> optional dependencies in `requirements.txt`.
 
 ### Frontend Setup
 

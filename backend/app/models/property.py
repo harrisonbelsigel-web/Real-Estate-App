@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from geoalchemy2 import Geometry
 import enum
 from backend.database import Base
 
@@ -24,7 +23,6 @@ class Property(Base):
     zip_code = Column(String, index=True)
     latitude = Column(Float)
     longitude = Column(Float)
-    geom = Column(Geometry("POINT", srid=4326), index=True)
 
     selling_price = Column(Float)
     property_taxes = Column(Float, nullable=True)

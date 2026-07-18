@@ -33,7 +33,6 @@ async def create_area(area: AreaCreate, db: Session = Depends(get_db)):
         center_longitude=area.center_longitude,
         radius_miles=area.radius_miles,
         scrape_frequency=area.scrape_frequency,
-        geom=f"POINT({area.center_longitude} {area.center_latitude})"
     )
     db.add(db_area)
     db.commit()
@@ -49,15 +48,8 @@ async def update_area(area_id: int, area: AreaUpdate, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Area not found")
 
     for field, value in area.dict(exclude_unset=True).items():
-        if field == "center_latitude" or field == "center_longitude":
+        if value is not None:
             setattr(db_area, field, value)
-        elif value is not None:
-            setattr(db_area, field, value)
-
-    if area.center_latitude or area.center_longitude:
-        lat = area.center_latitude or db_area.center_latitude
-        lon = area.center_longitude or db_area.center_longitude
-        db_area.geom = f"POINT({lon} {lat})"
 
     db.add(db_area)
     db.commit()

@@ -132,7 +132,6 @@ def init_areas():
                 center_latitude=area_data["center_latitude"],
                 center_longitude=area_data["center_longitude"],
                 radius_miles=area_data["radius_miles"],
-                geom=f"POINT({area_data['center_longitude']} {area_data['center_latitude']})"
             )
             db.add(area)
             print(f"Created area: {area_data['name']}")

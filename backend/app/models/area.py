@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from geoalchemy2 import Geometry
 from backend.database import Base
 
 
@@ -15,7 +14,6 @@ class Area(Base):
 
     center_latitude = Column(Float)
     center_longitude = Column(Float)
-    geom = Column(Geometry("POINT", srid=4326), index=True)
 
     radius_miles = Column(Float, default=5.0)
 

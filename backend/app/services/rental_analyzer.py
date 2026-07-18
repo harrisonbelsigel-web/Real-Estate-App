@@ -1,8 +1,19 @@
-from typing import List, Tuple, Optional
+from math import radians, sin, cos, asin, sqrt
+from typing import List, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
-from geoalchemy2.functions import ST_DWithin, ST_Distance
+from sqlalchemy import and_
 from backend.app.models import Property, RentalComparable, PropertyType
+
+
+def haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance between two lat/lon points, in miles."""
+    if None in (lat1, lon1, lat2, lon2):
+        return float("inf")
+    r = 3958.7613  # Earth radius in miles
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return 2 * r * asin(sqrt(a))
 
 
 class RentalComparableAnalyzer:
@@ -17,10 +28,6 @@ class RentalComparableAnalyzer:
         "bathrooms_delta": 1,
         "sqft_percent": 0.20
     }
-
-    @staticmethod
-    def miles_to_meters(miles: float) -> float:
-        return miles * 1609.34
 
     @staticmethod
     def matches_size_criteria(
@@ -59,45 +66,46 @@ class RentalComparableAnalyzer:
         state: str
     ) -> Tuple[List[RentalComparable], float]:
         """
-        Find rental comparables for a target property.
-        Auto-expands search radius if fewer than MIN_COMPS found.
-        Returns (comparables, search_radius_used)
+        Find rental comparables for a target property using Haversine distance.
+        Auto-expands search radius (3mi -> 5mi -> 10mi) if fewer than MIN_COMPS
+        size-matched rentals are found.
+        Returns (comparables, search_radius_used).
         """
+        # Pull all candidate rentals for the city/state once, then filter by
+        # computed distance in Python (works on SQLite or Postgres alike).
+        candidates = db.query(Property).filter(
+            and_(
+                Property.property_type == PropertyType.MULTI_FAMILY,
+                Property.city == city,
+                Property.state == state,
+            )
+        ).all()
+
+        # Precompute distance for each size-matched candidate.
+        matched = []
+        for rental in candidates:
+            if rental.id == target_property.id:
+                continue
+            if not RentalComparableAnalyzer.matches_size_criteria(rental, target_property):
+                continue
+            distance = haversine_miles(
+                target_property.latitude, target_property.longitude,
+                rental.latitude, rental.longitude,
+            )
+            matched.append((distance, rental))
+
+        matched.sort(key=lambda pair: pair[0])
+
         for radius_miles in [
             RentalComparableAnalyzer.INITIAL_RADIUS_MILES,
             RentalComparableAnalyzer.EXPAND_RADIUS_MILES,
             RentalComparableAnalyzer.MAX_RADIUS_MILES
         ]:
-            radius_meters = RentalComparableAnalyzer.miles_to_meters(radius_miles)
+            within = [(d, r) for d, r in matched if d <= radius_miles]
 
-            rentals = db.query(Property).filter(
-                and_(
-                    Property.property_type == PropertyType.MULTI_FAMILY,
-                    Property.city == city,
-                    Property.state == state,
-                    ST_DWithin(
-                        Property.geom,
-                        target_property.geom,
-                        radius_meters
-                    )
-                )
-            ).all()
-
-            matching_rentals = [
-                rental for rental in rentals
-                if RentalComparableAnalyzer.matches_size_criteria(rental, target_property)
-            ]
-
-            if len(matching_rentals) >= RentalComparableAnalyzer.MIN_COMPS:
+            if len(within) >= RentalComparableAnalyzer.MIN_COMPS:
                 comparable_objs = []
-                for rental in matching_rentals[:RentalComparableAnalyzer.TARGET_COMPS]:
-                    distance = db.query(
-                        func.ST_Distance(
-                            target_property.geom,
-                            rental.geom
-                        ) / 1609.34
-                    ).scalar()
-
+                for distance, rental in within[:RentalComparableAnalyzer.TARGET_COMPS]:
                     comp = RentalComparable(
                         comparable_address=rental.address,
                         comparable_latitude=rental.latitude,
