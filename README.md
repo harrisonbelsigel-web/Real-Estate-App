@@ -137,7 +137,28 @@ Real-Estate-App/
 
 ## How It Works
 
-### Scraping Process
+## API Endpoints Reference
+
+### Properties
+- `GET /api/properties` - List properties with advanced filtering
+  - Query params: `area_id`, `min_cap_rate` (default 6%), `max_price`, `min_price`, `bedrooms`, `meets_area_threshold`, `sort_by` (cap_rate|price|rent), `order` (asc|desc), `skip`, `limit`
+  - Returns: Paginated list with cap rate and rental data
+- `GET /api/properties/{id}` - Get full property details including analysis and rental comps
+- `GET /api/properties/area/{area_id}/summary` - Get area statistics (median cap rate, price, rent)
+
+### Areas
+- `GET /api/areas` - List all tracked areas
+- `GET /api/areas/{id}` - Get area details
+- `POST /api/areas` - Create new area
+- `PUT /api/areas/{id}` - Update area
+- `DELETE /api/areas/{id}` - Delete area
+
+### Admin/Scraping
+- `POST /admin/scrape/{area_id}` - Trigger scraping job (async background task)
+- `GET /admin/scraping-jobs` - View scraping history and status
+- `GET /admin/scraping-jobs/{id}` - Get specific scraping job details
+
+## Scraping Process
 
 1. **Trigger Scrape**: Call `POST /admin/scrape/{area_id}` to start scraping
 2. **Property Collection**: Scrapes Zillow & Redfin for for-sale listings in the area
@@ -172,7 +193,7 @@ Properties must match within:
 - Implement geographic search
 - Cap rate calculation
 
-### Phase 3: Analysis & Filtering
+### Phase 3: ✅ Analysis & Filtering
 - Property tax lookup
 - Insurance estimation
 - Advanced filtering
