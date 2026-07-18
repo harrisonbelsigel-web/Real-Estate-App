@@ -213,10 +213,16 @@ Properties must match within:
 - ✅ Property detail page with all metrics and rental comps
 - ✅ Admin panel (area CRUD, scrape triggers, job status)
 
-### Phase 5: Polish & Optimization
-- Caching
-- Background jobs
-- Performance tuning
+### Phase 5: ✅ Polish & Optimization
+- ✅ Scheduled scraping per area (daily/weekly/monthly via APScheduler)
+- ✅ In-process TTL caching for read-heavy endpoints, cleared after scrapes
+- ✅ Structured logging (configurable via LOG_LEVEL env var)
+- ✅ Schedule controls in the admin panel (frequency + last-scraped column)
+
+**Scheduling:** each area has a `scrape_frequency` — `manual` (default), `daily`
+(2am), `weekly` (Sunday 2am), or `monthly` (1st at 2am). Jobs run inside the
+FastAPI process via APScheduler; no Redis or worker services required. Changing
+an area's frequency through the API or admin panel reschedules it immediately.
 
 ## Contributing
 

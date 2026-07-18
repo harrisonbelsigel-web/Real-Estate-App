@@ -6,7 +6,14 @@ from backend.app.models import Property, Area, RentalComparable, InvestmentAnaly
 from backend.app.api.areas import router as areas_router
 from backend.app.api.scraping import router as scraping_router
 from backend.app.api.properties import router as properties_router
+from backend.app.services.scheduler import start_scheduler, shutdown_scheduler
+import logging
 import os
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
 
 app = FastAPI(title="Real Estate Investment App")
 
@@ -25,6 +32,11 @@ app.include_router(properties_router)
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
+    start_scheduler()
+
+@app.on_event("shutdown")
+async def shutdown():
+    shutdown_scheduler()
 
 @app.get("/")
 async def root():

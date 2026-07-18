@@ -5,6 +5,7 @@ from backend.database import get_db
 from backend.app.models import Area
 from backend.app.schemas import AreaCreate, AreaUpdate, AreaResponse
 from backend.app.services.scraper import PropertyScraper
+from backend.app.services.scheduler import sync_area_schedules
 
 router = APIRouter(prefix="/api/areas", tags=["areas"])
 
@@ -31,11 +32,13 @@ async def create_area(area: AreaCreate, db: Session = Depends(get_db)):
         center_latitude=area.center_latitude,
         center_longitude=area.center_longitude,
         radius_miles=area.radius_miles,
+        scrape_frequency=area.scrape_frequency,
         geom=f"POINT({area.center_longitude} {area.center_latitude})"
     )
     db.add(db_area)
     db.commit()
     db.refresh(db_area)
+    sync_area_schedules()
     return db_area
 
 
@@ -59,6 +62,7 @@ async def update_area(area_id: int, area: AreaUpdate, db: Session = Depends(get_
     db.add(db_area)
     db.commit()
     db.refresh(db_area)
+    sync_area_schedules()
     return db_area
 
 
@@ -70,4 +74,5 @@ async def delete_area(area_id: int, db: Session = Depends(get_db)):
 
     db.delete(db_area)
     db.commit()
+    sync_area_schedules()
     return {"detail": "Area deleted"}

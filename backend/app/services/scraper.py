@@ -12,6 +12,7 @@ from backend.app.services.zillow_scraper import ZillowScraper
 from backend.app.services.redfin_scraper import RedfinScraper
 from backend.app.services.rental_analyzer import RentalComparableAnalyzer
 from backend.app.services.calculator import CapRateCalculator
+from backend.app.services.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,9 @@ class PropertyScraper:
 
         db.add(log)
         db.commit()
+
+        # Invalidate cached listings/summaries now that data changed.
+        cache.clear()
 
         return log
 

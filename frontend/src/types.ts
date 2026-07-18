@@ -63,6 +63,8 @@ export interface PropertyDetail {
   rental_comparables: RentalComparable[]
 }
 
+export type ScrapeFrequency = 'manual' | 'daily' | 'weekly' | 'monthly'
+
 export interface Area {
   id: number
   name: string
@@ -71,6 +73,8 @@ export interface Area {
   center_latitude: number
   center_longitude: number
   radius_miles: number
+  scrape_frequency: ScrapeFrequency
+  last_scraped_at: string | null
   median_cap_rate: number | null
   median_rent: number | null
   created_at: string

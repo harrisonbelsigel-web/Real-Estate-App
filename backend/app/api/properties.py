@@ -5,6 +5,7 @@ from backend.database import get_db
 from backend.app.models import Property, InvestmentAnalysis, RentalComparable, Area
 from backend.app.schemas.property_detail import PropertyDetailResponse, PropertyListItemResponse, AreaSummaryResponse
 from backend.app.services.property_analyzer import PropertyFilter
+from backend.app.services.cache import cache
 
 router = APIRouter(prefix="/api/properties", tags=["properties"])
 
@@ -143,13 +144,18 @@ async def get_property_details(property_id: int, db: Session = Depends(get_db)):
 @router.get("/area/{area_id}/summary", response_model=dict)
 async def get_area_summary(area_id: int, db: Session = Depends(get_db)):
     """Get investment summary statistics for an area."""
+    cache_key = f"area-summary-{area_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     area = db.query(Area).filter(Area.id == area_id).first()
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
 
     summary = PropertyFilter.get_area_summary(db, area_id)
 
-    return {
+    result = {
         "area_id": area_id,
         "area_name": area.name,
         "total_properties": summary["total_properties"],
@@ -158,3 +164,5 @@ async def get_area_summary(area_id: int, db: Session = Depends(get_db)):
         "median_rent": summary["median_rent"],
         "average_cap_rate": summary["average_cap_rate"],
     }
+    cache.set(cache_key, result)
+    return result

@@ -9,6 +9,7 @@ const emptyForm = {
   center_latitude: '',
   center_longitude: '',
   radius_miles: '5',
+  scrape_frequency: 'manual',
 }
 
 export default function AdminPage() {
@@ -38,6 +39,7 @@ export default function AdminPage() {
       center_latitude: Number(form.center_latitude),
       center_longitude: Number(form.center_longitude),
       radius_miles: Number(form.radius_miles),
+      scrape_frequency: form.scrape_frequency,
     }
     try {
       if (editingId) {
@@ -64,6 +66,7 @@ export default function AdminPage() {
       center_latitude: String(area.center_latitude),
       center_longitude: String(area.center_longitude),
       radius_miles: String(area.radius_miles),
+      scrape_frequency: area.scrape_frequency ?? 'manual',
     })
   }
 
@@ -151,6 +154,18 @@ export default function AdminPage() {
               onChange={(e) => setForm({ ...form, radius_miles: e.target.value })}
             />
           </label>
+          <label>
+            Auto-scrape
+            <select
+              value={form.scrape_frequency}
+              onChange={(e) => setForm({ ...form, scrape_frequency: e.target.value })}
+            >
+              <option value="manual">Manual only</option>
+              <option value="daily">Daily (2am)</option>
+              <option value="weekly">Weekly (Sun 2am)</option>
+              <option value="monthly">Monthly (1st, 2am)</option>
+            </select>
+          </label>
           <button type="submit" className="btn">
             {editingId ? 'Save Changes' : 'Add Area'}
           </button>
@@ -178,6 +193,8 @@ export default function AdminPage() {
               <th>City</th>
               <th>Radius</th>
               <th>Median Cap Rate</th>
+              <th>Schedule</th>
+              <th>Last Scraped</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -190,6 +207,10 @@ export default function AdminPage() {
                 </td>
                 <td>{a.radius_miles} mi</td>
                 <td>{formatCapRate(a.median_cap_rate)}</td>
+                <td style={{ textTransform: 'capitalize' }}>{a.scrape_frequency ?? 'manual'}</td>
+                <td>
+                  {a.last_scraped_at ? new Date(a.last_scraped_at).toLocaleString() : 'Never'}
+                </td>
                 <td style={{ display: 'flex', gap: '0.4rem' }}>
                   <button className="btn" onClick={() => scrape(a)}>
                     Scrape

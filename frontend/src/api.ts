@@ -40,6 +40,7 @@ export const api = {
     center_latitude: number
     center_longitude: number
     radius_miles: number
+    scrape_frequency?: string
   }): Promise<Area> {
     const { data } = await client.post('/api/areas', area)
     return data

@@ -22,6 +22,10 @@ class Area(Base):
     median_cap_rate = Column(Float, nullable=True)
     median_rent = Column(Float, nullable=True)
 
+    # "manual" (default), "daily", "weekly", or "monthly"
+    scrape_frequency = Column(String, default="manual")
+    last_scraped_at = Column(DateTime(timezone=True), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
