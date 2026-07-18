@@ -1,0 +1,73 @@
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from sqlalchemy.orm import Session
+from typing import List
+from backend.database import get_db
+from backend.app.models import Area
+from backend.app.schemas import AreaCreate, AreaUpdate, AreaResponse
+from backend.app.services.scraper import PropertyScraper
+
+router = APIRouter(prefix="/api/areas", tags=["areas"])
+
+
+@router.get("", response_model=List[AreaResponse])
+async def list_areas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(Area).offset(skip).limit(limit).all()
+
+
+@router.get("/{area_id}", response_model=AreaResponse)
+async def get_area(area_id: int, db: Session = Depends(get_db)):
+    area = db.query(Area).filter(Area.id == area_id).first()
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    return area
+
+
+@router.post("", response_model=AreaResponse)
+async def create_area(area: AreaCreate, db: Session = Depends(get_db)):
+    db_area = Area(
+        name=area.name,
+        city=area.city,
+        state=area.state,
+        center_latitude=area.center_latitude,
+        center_longitude=area.center_longitude,
+        radius_miles=area.radius_miles,
+        geom=f"POINT({area.center_longitude} {area.center_latitude})"
+    )
+    db.add(db_area)
+    db.commit()
+    db.refresh(db_area)
+    return db_area
+
+
+@router.put("/{area_id}", response_model=AreaResponse)
+async def update_area(area_id: int, area: AreaUpdate, db: Session = Depends(get_db)):
+    db_area = db.query(Area).filter(Area.id == area_id).first()
+    if not db_area:
+        raise HTTPException(status_code=404, detail="Area not found")
+
+    for field, value in area.dict(exclude_unset=True).items():
+        if field == "center_latitude" or field == "center_longitude":
+            setattr(db_area, field, value)
+        elif value is not None:
+            setattr(db_area, field, value)
+
+    if area.center_latitude or area.center_longitude:
+        lat = area.center_latitude or db_area.center_latitude
+        lon = area.center_longitude or db_area.center_longitude
+        db_area.geom = f"POINT({lon} {lat})"
+
+    db.add(db_area)
+    db.commit()
+    db.refresh(db_area)
+    return db_area
+
+
+@router.delete("/{area_id}")
+async def delete_area(area_id: int, db: Session = Depends(get_db)):
+    db_area = db.query(Area).filter(Area.id == area_id).first()
+    if not db_area:
+        raise HTTPException(status_code=404, detail="Area not found")
+
+    db.delete(db_area)
+    db.commit()
+    return {"detail": "Area deleted"}

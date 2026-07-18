@@ -112,9 +112,18 @@ Real-Estate-App/
 │   ├── app/
 │   │   ├── models/       # SQLAlchemy models
 │   │   ├── schemas/      # Pydantic schemas
-│   │   ├── api/          # API routes (routes coming soon)
-│   │   ├── services/     # Business logic (services coming soon)
+│   │   ├── api/          # API routes
+│   │   │   ├── areas.py       # Area CRUD endpoints
+│   │   │   └── scraping.py    # Scraping job endpoints
+│   │   ├── services/     # Business logic
+│   │   │   ├── scraper.py           # Main scraping orchestration
+│   │   │   ├── zillow_scraper.py    # Zillow listings scraper
+│   │   │   ├── redfin_scraper.py    # Redfin listings scraper
+│   │   │   ├── rental_analyzer.py   # Find rental comparables
+│   │   │   └── calculator.py        # Cap rate calculations
 │   │   └── main.py       # FastAPI app
+│   ├── scripts/
+│   │   └── init_areas.py # Initialize database with default areas
 │   ├── database.py       # Database configuration
 │   └── requirements.txt
 ├── frontend/
@@ -126,6 +135,29 @@ Real-Estate-App/
 └── README.md
 ```
 
+## How It Works
+
+### Scraping Process
+
+1. **Trigger Scrape**: Call `POST /admin/scrape/{area_id}` to start scraping
+2. **Property Collection**: Scrapes Zillow & Redfin for for-sale listings in the area
+3. **Find Comparables**: For each property, finds rental listings with similar specs (±1 bed, ±1 bath, ±20% sqft)
+4. **Auto-Expand**: If fewer than 5 rentals found, automatically expands search radius (3mi → 5mi → 10mi)
+5. **Cap Rate Calculation**: 
+   - Average monthly rent from comparable properties
+   - Annual income = avg rent × 12
+   - Cap rate = Annual income / Purchase price
+6. **Filter & Store**: Only saves properties with cap rate ≥ 6%
+7. **Calculate Medians**: Updates area's median cap rate for threshold comparison
+
+### Rental Comparable Matching
+
+Properties must match within:
+- **Bedrooms**: ±1
+- **Bathrooms**: ±1  
+- **Square Footage**: ±20%
+- **Distance**: 3-10 miles (auto-expands if needed)
+
 ## Development Roadmap
 
 ### Phase 1: ✅ Core Backend & Data Model
@@ -134,7 +166,7 @@ Real-Estate-App/
 - ✅ Data models
 - ✅ Basic CRUD endpoints
 
-### Phase 2: Scraping Infrastructure (In Progress)
+### Phase 2: ✅ Scraping Infrastructure
 - Build Zillow scraper
 - Build rental property scraper
 - Implement geographic search

@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from backend.database import engine, get_db, Base
 from backend.app.models import Property, Area, RentalComparable, InvestmentAnalysis, ScrapingLog
+from backend.app.api.areas import router as areas_router
+from backend.app.api.scraping import router as scraping_router
 import os
 
 app = FastAPI(title="Real Estate Investment App")
@@ -14,6 +16,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(areas_router)
+app.include_router(scraping_router)
 
 @app.on_event("startup")
 async def startup():
