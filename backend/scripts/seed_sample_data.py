@@ -102,7 +102,9 @@ def seed():
                     latitude=jitter(m["lat"]),
                     longitude=jitter(m["lon"]),
                     selling_price=price,
-                    listing_url=f"https://example.com/sample-listing/{city.lower()}-{i}",
+                    # Sample data: no real listing exists, so link to the live
+                    # Zillow search for the city instead of a dead placeholder.
+                    listing_url=f"https://www.zillow.com/homes/for_sale/{city},-{m['state']}_rb/",
                     bedrooms=beds,
                     bathrooms=random.choice([1.0, 1.5, 2.0, 2.5]),
                     square_feet=beds * 480 + random.randint(-150, 300),

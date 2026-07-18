@@ -47,6 +47,21 @@ export default function PropertiesPage() {
 
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0
 
+  // Group the current page's rows by city (groups alphabetical, rows keep the
+  // API's sort order within each group).
+  const cityGroups = (() => {
+    if (!data) return [] as { label: string; items: typeof data.items }[]
+    const groups = new Map<string, typeof data.items>()
+    for (const item of data.items) {
+      const label = `${item.city}, ${item.state}`
+      if (!groups.has(label)) groups.set(label, [])
+      groups.get(label)!.push(item)
+    }
+    return [...groups.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([label, items]) => ({ label, items }))
+  })()
+
   return (
     <div>
       <div className="filters">
@@ -135,7 +150,6 @@ export default function PropertiesPage() {
             <thead>
               <tr>
                 <th>Address</th>
-                <th>City</th>
                 <th onClick={() => toggleSort('price')}>
                   Price {filters.sort_by === 'price' ? (filters.order === 'desc' ? '▼' : '▲') : ''}
                 </th>
@@ -150,30 +164,46 @@ export default function PropertiesPage() {
                   {filters.sort_by === 'cap_rate' ? (filters.order === 'desc' ? '▼' : '▲') : ''}
                 </th>
                 <th>Vs. Median</th>
+                <th>Listing</th>
               </tr>
             </thead>
-            <tbody>
-              {data.items.map((p) => (
-                <tr key={p.id} onClick={() => navigate(`/properties/${p.id}`)}>
-                  <td>{p.address}</td>
-                  <td>
-                    {p.city}, {p.state}
-                  </td>
-                  <td>{formatCurrency(p.selling_price)}</td>
-                  <td>{p.bedrooms ?? '—'}</td>
-                  <td>{p.bathrooms ?? '—'}</td>
-                  <td>{formatCurrency(p.rental_estimate)}/mo</td>
-                  <td className="cap-rate">{formatCapRate(p.calculated_cap_rate)}</td>
-                  <td>
-                    {p.meets_area_threshold ? (
-                      <span className="badge badge-green">Above median</span>
-                    ) : (
-                      <span className="badge badge-gray">Below median</span>
-                    )}
+            {cityGroups.map((group) => (
+              <tbody key={group.label}>
+                <tr className="city-header-row">
+                  <td colSpan={8}>
+                    {group.label} ({group.items.length})
                   </td>
                 </tr>
-              ))}
-            </tbody>
+                {group.items.map((p) => (
+                  <tr key={p.id} onClick={() => navigate(`/properties/${p.id}`)}>
+                    <td>{p.address}</td>
+                    <td>{formatCurrency(p.selling_price)}</td>
+                    <td>{p.bedrooms ?? '—'}</td>
+                    <td>{p.bathrooms ?? '—'}</td>
+                    <td>{formatCurrency(p.rental_estimate)}/mo</td>
+                    <td className="cap-rate">{formatCapRate(p.calculated_cap_rate)}</td>
+                    <td>
+                      {p.meets_area_threshold ? (
+                        <span className="badge badge-green">Above median</span>
+                      ) : (
+                        <span className="badge badge-gray">Below median</span>
+                      )}
+                    </td>
+                    <td>
+                      <a
+                        className="listing-link"
+                        href={p.listing_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View ↗
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            ))}
           </table>
 
           <div className="pagination">

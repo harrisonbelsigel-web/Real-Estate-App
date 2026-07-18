@@ -67,6 +67,7 @@ async def list_properties(
             "selling_price": prop.selling_price,
             "bedrooms": prop.bedrooms,
             "bathrooms": prop.bathrooms,
+            "listing_url": prop.listing_url,
             "calculated_cap_rate": analysis.calculated_cap_rate if analysis else None,
             "rental_estimate": analysis.rental_estimate if analysis else None,
             "meets_minimum_threshold": analysis.meets_minimum_threshold if analysis else False,

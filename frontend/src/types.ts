@@ -6,6 +6,7 @@ export interface PropertyListItem {
   selling_price: number
   bedrooms: number | null
   bathrooms: number | null
+  listing_url: string
   calculated_cap_rate: number | null
   rental_estimate: number | null
   meets_minimum_threshold: boolean
