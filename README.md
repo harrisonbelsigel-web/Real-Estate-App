@@ -81,10 +81,10 @@ npm install
 
 3. Run the development server:
 ```bash
-npm start
+npm run dev
 ```
 
-The app will open at `http://localhost:3000`
+The app will open at `http://localhost:3000` (API requests are proxied to the backend at `http://localhost:8000`)
 
 ## API Endpoints
 
@@ -128,9 +128,17 @@ Real-Estate-App/
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── pages/        # Page components
-│   │   └── App.tsx
+│   │   ├── pages/
+│   │   │   ├── PropertiesPage.tsx     # Filterable/sortable property table
+│   │   │   ├── PropertyDetailPage.tsx # Full metrics + rental comps
+│   │   │   ├── MapPage.tsx            # Leaflet map with property pins
+│   │   │   └── AdminPage.tsx          # Area CRUD + scraping controls
+│   │   ├── api.ts        # API client (axios)
+│   │   ├── types.ts      # TypeScript types
+│   │   ├── App.tsx       # Router + layout
+│   │   └── main.tsx      # Entry point
+│   ├── index.html
+│   ├── vite.config.ts    # Dev server proxies /api and /admin to backend
 │   └── package.json
 └── README.md
 ```
@@ -198,11 +206,12 @@ Properties must match within:
 - Insurance estimation
 - Advanced filtering
 
-### Phase 4: Frontend
-- React app setup
-- Map visualization
-- Property listings
-- Admin panel
+### Phase 4: ✅ Frontend
+- ✅ React + TypeScript + Vite setup
+- ✅ Leaflet map visualization (no API key needed)
+- ✅ Property listings with filtering/sorting/pagination
+- ✅ Property detail page with all metrics and rental comps
+- ✅ Admin panel (area CRUD, scrape triggers, job status)
 
 ### Phase 5: Polish & Optimization
 - Caching
